@@ -40,9 +40,12 @@ const nextConfig: NextConfig = {
     remotePatterns,
   },
   async headers() {
-    const isStaging = process.env.NEXT_PUBLIC_SERVER_URL?.includes('staging.')
+    // Fail closed: ONLY the canonical production domain is indexable.
+    // Every preview URL, *.vercel.app host and staging domain gets noindex,
+    // including when NEXT_PUBLIC_SERVER_URL is unset entirely.
+    const isCanonical = process.env.NEXT_PUBLIC_SERVER_URL === 'https://williamhamal.com.np'
 
-    if (!isStaging) return []
+    if (isCanonical) return []
 
     return [
       {
