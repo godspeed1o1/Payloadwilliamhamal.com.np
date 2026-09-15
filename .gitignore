@@ -11,6 +11,7 @@ next-env.d.ts
 *.db-wal
 *.tsbuildinfo
 /artifacts/
+/*.png
 
 # Payload default media upload directory
 public/media/
