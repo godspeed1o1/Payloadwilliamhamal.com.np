@@ -11,6 +11,19 @@ const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : process.env.__NEXT_PRIVATE_ORIGIN || 'http://localhost:3000'
 
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL
+
+const remotePatterns = [NEXT_PUBLIC_SERVER_URL, R2_PUBLIC_URL]
+  .filter((item): item is string => Boolean(item))
+  .map((item) => {
+    const url = new URL(item)
+
+    return {
+      hostname: url.hostname,
+      protocol: url.protocol.replace(':', '') as 'http' | 'https',
+    }
+  })
+
 const nextConfig: NextConfig = {
   // Temporarily required on Windows until Next.js fixes Turbopack Sass resolution.
   // See: https://github.com/vercel/next.js/issues/86431
@@ -24,16 +37,19 @@ const nextConfig: NextConfig = {
       },
     ],
     qualities: [100],
-    remotePatterns: [
-      ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
-        const url = new URL(item)
+    remotePatterns,
+  },
+  async headers() {
+    const isStaging = process.env.NEXT_PUBLIC_SERVER_URL?.includes('staging.')
 
-        return {
-          hostname: url.hostname,
-          protocol: url.protocol.replace(':', '') as 'http' | 'https',
-        }
-      }),
-    ],
+    if (!isStaging) return []
+
+    return [
+      {
+        source: '/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+    ]
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
